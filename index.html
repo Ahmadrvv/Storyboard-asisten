@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storyboard Loader - Professional</title>
+    
+    <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        ui: {
+                            bg: '#000000',          // Pure Black OLED
+                            card: '#070a12',        // Deep Space Blue-Black
+                            border: '#161f30',      // Refined dark border
+                            text: '#f8fafc',        // Slate-50 crisp text
+                            muted: '#94a3b8',       // Slate-400 muted text
+                            accent: '#3b82f6',      // Professional Blue-500
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #000000;
+            color: #f8fafc;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Ambient Glow - Bubbly/Organic touch */
+        .bg-blob {
+            position: fixed;
+            top: -150px;
+            right: -100px;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.07) 0%, rgba(0, 0, 0, 0) 70%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Sleek Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #161f30; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #1e293b; }
+
+        /* Smooth Collapse Animation */
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease;
+            opacity: 0;
+        }
+        .collapsible-content.expanded { opacity: 1; }
+
+        /* Clean Tree Connector Lines */
+        .tree-container { position: relative; margin-bottom: 1.5rem; z-index: 10; }
+        .tree-line {
+            position: absolute;
+            left: 27px; 
+            top: 24px;
+            bottom: 32px;
+            width: 2px;
+            background: linear-gradient(to bottom, #1e293b 0%, #0f172a 80%, transparent 100%);
+            z-index: -1;
+            border-radius: 2px;
+        }
+        .tree-node-connector {
+            position: absolute;
+            left: -27px;
+            top: 36px;
+            width: 20px;
+            height: 2px;
+            background-color: #1e293b;
+            border-radius: 2px;
+        }
+
+        /* Organic Squircle Checkbox */
+        .premium-checkbox {
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border: 2px solid #1e293b;
+            border-radius: 8px; /* Squircle */
+            outline: none;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
+            background-color: #020617;
+        }
+        .premium-checkbox:hover { border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.1); }
+        .premium-checkbox:checked { background-color: #3b82f6; border-color: #3b82f6; }
+        .premium-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 8px;
+            width: 5px;
+            height: 10px;
+            border: solid #ffffff;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        .premium-checkbox.partial { background-color: rgba(59, 130, 246, 0.2); border-color: #3b82f6; }
+        .premium-checkbox.partial::after {
+            content: '';
+            position: absolute;
+            top: 9px;
+            left: 6px;
+            width: 8px;
+            height: 2px;
+            background-color: #3b82f6;
+            border-radius: 2px;
+        }
+
+        /* Card Elevations */
+        .card-parent {
+            background-color: #070a12;
+            border: 1px solid #161f30;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.02);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .card-parent:hover { border-color: #1e293b; }
+
+        .card-child {
+            background-color: #04060b;
+            border: 1px solid #121926;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+            transition: all 0.3s ease;
+        }
+        .card-child:hover { border-color: #1e293b; }
+        
+        .code-box {
+            background-color: #020408;
+            border: 1px solid #121926;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col font-sans relative overflow-x-hidden selection:bg-blue-500/30">
+    
+    <div class="bg-blob"></div>
+
+    <!-- Top Navigation Bar -->
+    <header class="fixed top-0 w-full bg-ui-bg/80 backdrop-blur-xl border-b border-ui-border z-40">
+        <div class="max-w-4xl mx-auto px-5 h-20 flex items-center justify-between relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+                    <i class="ph-fill ph-kanban text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-sm font-bold text-white tracking-wide">Welcome back,</h1>
+                    <p class="text-xs font-semibold text-blue-400">Storyboard Loader v2</p>
+                </div>
+            </div>
+            
+            <div id="headerControls" class="flex items-center gap-5 hidden">
+                <div class="flex flex-col items-end gap-1.5">
+                    <span id="progressText" class="text-[10px] font-bold text-ui-muted uppercase tracking-widest bg-ui-card px-2.5 py-1 rounded-md border border-ui-border">0/0 SELESAI</span>
+                    <div class="w-32 h-1.5 bg-ui-border rounded-full overflow-hidden">
+                        <div id="progressBar" class="h-full bg-blue-500 transition-all duration-500 ease-out rounded-full w-0"></div>
+                    </div>
+                </div>
+                <div class="w-px h-8 bg-ui-border"></div>
+                <button id="btnReset" class="w-10 h-10 rounded-xl flex items-center justify-center text-ui-muted bg-ui-card border border-ui-border hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/10 transition-all shadow-sm" title="Reset Project">
+                    <i class="ph ph-trash text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow pt-28 pb-20 px-5 max-w-4xl mx-auto w-full relative z-10">
+        
+        <div id="uploadState" class="flex flex-col items-center justify-center h-[65vh] text-center">
+            <div class="w-28 h-28 card-parent rounded-[2rem] flex items-center justify-center mb-8 relative group transition-all duration-300 hover:border-blue-500/30 hover:-translate-y-1">
+                <div class="absolute inset-0 bg-blue-500/5 rounded-[2rem] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <i class="ph-duotone ph-file-md text-5xl text-ui-muted group-hover:text-blue-500 transition-colors relative z-10"></i>
+            </div>
+            <label for="fileInput" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3.5 rounded-2xl text-sm font-semibold tracking-wide transition-all shadow-lg shadow-blue-600/20 cursor-pointer flex items-center gap-3">
+                <i class="ph-bold ph-upload-simple text-lg"></i>
+                Pilih File Markdown (.md)
+            </label>
+            <input type="file" id="fileInput" accept=".md" class="hidden">
+        </div>
+
+        <!-- Project Content View -->
+        <div id="contentState" class="hidden flex flex-col gap-2 mt-2">
+            <!-- Dynamically populated script tree -->
+        </div>
+
+    </main>
+
+    <!-- Reset Modal -->
+    <div id="resetModal" class="fixed inset-0 z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-md" id="modalBackdrop"></div>
+        <div class="relative card-parent rounded-3xl p-7 max-w-sm w-full mx-4 transform scale-95 transition-transform duration-300 border-red-500/20" id="modalContent">
+            <div class="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center mb-5 text-red-400 border border-red-500/20">
+                <i class="ph-fill ph-warning-circle text-3xl"></i>
+            </div>
+            <h3 class="text-base font-bold text-white mb-2">Hapus Proyek?</h3>
+            <p class="text-ui-muted text-xs mb-7 leading-relaxed">
+                Tindakan ini akan menghapus seluruh data skrip dan status pengerjaan yang tersimpan di memori browser.
+            </p>
+            <div class="flex items-center gap-3">
+                <button id="btnCancelReset" class="flex-1 py-3 rounded-xl text-xs font-bold tracking-wide bg-[#121926] text-ui-muted hover:text-white border border-[#1e293b] hover:border-[#334155] transition-colors">BATAL</button>
+                <button id="btnConfirmReset" class="flex-1 py-3 rounded-xl text-xs font-bold tracking-wide bg-red-600/90 text-white hover:bg-red-500 transition-colors shadow-lg shadow-red-900/20">HAPUS DATA</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 translate-y-10 opacity-0 bg-[#f8fafc] text-[#0f172a] px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 transition-all duration-300 z-50 pointer-events-none font-sans">
+        <div class="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center">
+            <i class="ph-bold ph-check text-blue-600 text-sm"></i>
+        </div>
+        <span class="text-[11px] font-bold tracking-wide uppercase" id="toastMsg">Tersalin ke Clipboard</span>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'storyboardData_v7_unnoticed';
+
+        let appData = {
+            scripts: [],
+            totalScenes: 0,
+            completedScenes: 0
+        };
+
+        const els = {
+            uploadState: document.getElementById('uploadState'),
+            contentState: document.getElementById('contentState'),
+            fileInput: document.getElementById('fileInput'),
+            headerControls: document.getElementById('headerControls'),
+            progressText: document.getElementById('progressText'),
+            progressBar: document.getElementById('progressBar'),
+            btnReset: document.getElementById('btnReset'),
+            resetModal: document.getElementById('resetModal'),
+            modalBackdrop: document.getElementById('modalBackdrop'),
+            modalContent: document.getElementById('modalContent'),
+            btnCancelReset: document.getElementById('btnCancelReset'),
+            btnConfirmReset: document.getElementById('btnConfirmReset'),
+            toast: document.getElementById('toast')
+        };
+
+        function init() {
+            loadFromStorage();
+            if (appData.scripts.length > 0) {
+                renderApp();
+            }
+            setupEventListeners();
+        }
+
+        function loadFromStorage() {
+            const saved = localStorage.getItem(STORAGE_KEY); 
+            if (saved) {
+                try {
+                    appData = JSON.parse(saved);
+                } catch(e) {
+                    console.error("Failed to parse local storage", e);
+                }
+            }
+        }
+
+        function saveToStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+        }
+
+        function setupEventListeners() {
+            els.fileInput.addEventListener('change', handleFileUpload);
+            els.btnReset.addEventListener('click', showModal);
+            els.btnCancelReset.addEventListener('click', hideModal);
+            els.modalBackdrop.addEventListener('click', hideModal);
+            els.btnConfirmReset.addEventListener('click', confirmReset);
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                parseMarkdown(e.target.result);
+            };
+            reader.readAsText(file);
+        }
+
+        function parseMarkdown(text) {
+            let mainContent = text;
+            const stopKeywords = ["RINGKASAN CREDIT", "CATATAN NASKAH"];
+            for (let keyword of stopKeywords) {
+                if (mainContent.includes(keyword)) {
+                    mainContent = mainContent.split(keyword)[0];
+                }
+            }
+
+            const scriptBlocks = mainContent.split(/(?:^|\n)SKRIP\s+/).filter(block => block.trim() !== "");
+            
+            let parsedScripts = [];
+            let totalScenesCount = 0;
+
+            scriptBlocks.forEach((block, scriptIndex) => {
+                let lines = block.trim().split('\n');
+                let rawTitleStr = lines[0].trim(); 
+                
+                // Clean title: "1 (Hook)" -> "1"
+                let titleStr = rawTitleStr.replace(/\s*\(.*?\)\s*/g, '').trim(); 
+                titleStr = titleStr.replace(/SKRIP\s*/i, '').trim();
+                
+                let terjemahanText = "";
+                const terjemahanMatch = block.match(/TERJEMAHAN:\s*([\s\S]*?)(?=VISUAL BREAKDOWN:|$)/i);
+                if (terjemahanMatch) {
+                    terjemahanText = terjemahanMatch[1].trim();
+                }
+
+                const sceneBlocks = block.split(/(?:^|\n)SCENE\s+/).filter((_, i) => i > 0); 
+                let parsedScenes = [];
+
+                sceneBlocks.forEach((sBlock, sceneIndex) => {
+                    let sLines = sBlock.trim().split('\n');
+                    let sTitleStr = sLines[0].trim().replace(/^[-_]+.*$/, '').trim(); 
+
+                    // Robust field extraction matching Start of Line + Label + Quotes handling
+                    const extractField = (fieldName) => {
+                        const regex = new RegExp('^' + fieldName + ':\\s*(.*)$', 'im');
+                        const match = sBlock.match(regex);
+                        if (match) {
+                            let val = match[1].trim();
+                            if (val.startsWith('"') && val.endsWith('"')) {
+                                val = val.substring(1, val.length - 1);
+                            }
+                            return val;
+                        }
+                        return "";
+                    };
+
+                    let vType = extractField("Visual");
+                    let iconType = 'ph-video-camera';
+                    let vTypeLower = vType.toLowerCase();
+                    if(vTypeLower.includes('history')) iconType = 'ph-film-strip';
+                    else if(vTypeLower.includes('mechanic')) iconType = 'ph-cube';
+                    else if(vTypeLower.includes('lower third')) iconType = 'ph-subtitles';
+                    else if(vTypeLower.includes('ai')) iconType = 'ph-sparkle';
+
+                    parsedScenes.push({
+                        id: `s${scriptIndex}-c${sceneIndex}`,
+                        title: "SCENE " + sTitleStr,
+                        scriptText: extractField("Script"),
+                        terjemahanText: extractField("Terjemahan"),
+                        visualType: vType,
+                        ideVisual: extractField("Ide Visual"),
+                        icon: iconType,
+                        duration: extractField("Durasi Narasi"),
+                        durasiGenerate: extractField("Durasi Generate"),
+                        kwSearchA: extractField("Kata Kunci Pencarian A"),
+                        kwSearchB: extractField("Kata Kunci Pencarian B"),
+                        kwSearchC: extractField("Kata Kunci Pencarian C"),
+                        kwImgA: extractField("Kata Kunci Gambar A"),
+                        kwImgB: extractField("Kata Kunci Gambar B"),
+                        kwImgC: extractField("Kata Kunci Gambar C"),
+                        prompt: extractField("Prompt AI"),
+                        videoPrompt: extractField("Video Prompt"),
+                        overlayText: extractField("Teks"),
+                        judul: extractField("Judul"),
+                        subtitle: extractField("Subtitle"),
+                        completed: false
+                    });
+
+                    totalScenesCount++;
+                });
+
+                parsedScripts.push({
+                    id: `script-${scriptIndex}`,
+                    title: "SKRIP " + titleStr,
+                    terjemahan: terjemahanText,
+                    scenes: parsedScenes,
+                    completed: false,
+                    expanded: false 
+                });
+            });
+
+            appData = {
+                scripts: parsedScripts,
+                totalScenes: totalScenesCount,
+                completedScenes: 0
+            };
+
+            saveToStorage();
+            renderApp();
+        }
+
+        function renderApp() {
+            els.uploadState.classList.add('hidden');
+            els.contentState.classList.remove('hidden');
+            els.headerControls.classList.remove('hidden');
+
+            updateProgress();
+            els.contentState.innerHTML = '';
+
+            appData.scripts.forEach((script, sIndex) => {
+                const scenesCompleted = script.scenes.filter(s => s.completed).length;
+                const isPartial = scenesCompleted > 0 && scenesCompleted < script.scenes.length;
+                const isCompleted = scenesCompleted === script.scenes.length && script.scenes.length > 0;
+                script.completed = isCompleted;
+
+                const scriptWrapper = document.createElement('div');
+                scriptWrapper.className = 'tree-container';
+
+                // Header Skrip (Parent)
+                const header = document.createElement('div');
+                header.className = 'card-parent rounded-2xl p-4 md:px-5 md:py-4 flex items-start md:items-center gap-4 relative z-10';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `script-cb-${sIndex}`;
+                checkbox.className = `premium-checkbox mt-0.5 md:mt-0 ${isPartial ? 'partial' : ''}`;
+                checkbox.checked = isCompleted;
+                checkbox.onclick = (e) => {
+                    e.stopPropagation();
+                    toggleScriptComplete(sIndex, e.target.checked);
+                };
+
+                const headerContent = document.createElement('div');
+                headerContent.className = 'flex-grow cursor-pointer select-none';
+                headerContent.onclick = () => toggleScriptExpand(sIndex);
+                
+                headerContent.innerHTML = `
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        <div class="flex-grow">
+                            <h2 class="text-sm font-bold text-white tracking-wide mb-1 uppercase">${script.title}</h2>
+                            <p class="text-xs text-ui-muted leading-relaxed line-clamp-1 pr-4 font-normal">${script.terjemahan}</p>
+                        </div>
+                        <div class="flex items-center gap-3 flex-shrink-0 mt-1 md:mt-0">
+                            <div class="flex items-center gap-2 text-ui-muted text-[11px] font-bold tracking-wider bg-[#020408] px-3.5 py-1.5 rounded-lg border border-ui-border">
+                                <span id="script-progress-${sIndex}">${scenesCompleted}/${script.scenes.length}</span>
+                                <i class="ph-bold ph-caret-down transition-transform duration-300 ${script.expanded ? 'transform rotate-180 text-blue-500' : ''}"></i>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                header.appendChild(checkbox);
+                header.appendChild(headerContent);
+                scriptWrapper.appendChild(header);
+
+                // Container Scene (Child)
+                const childrenContainer = document.createElement('div');
+                childrenContainer.className = `collapsible-content ${script.expanded ? 'expanded' : ''}`;
+                childrenContainer.id = `content-${script.id}`;
+                
+                const innerWrapper = document.createElement('div');
+                innerWrapper.className = 'pt-5 pb-3 pl-[48px] relative flex flex-col gap-4';
+                
+                if (script.scenes.length > 0) {
+                    const line = document.createElement('div');
+                    line.className = 'tree-line';
+                    innerWrapper.appendChild(line);
+                }
+
+                script.scenes.forEach((scene, cIndex) => {
+                    const sceneCard = document.createElement('div');
+                    sceneCard.id = `scene-card-${sIndex}-${cIndex}`;
+                    const completionStyles = scene.completed ? 'opacity-40 grayscale-[30%]' : 'opacity-100 grayscale-0';
+                    sceneCard.className = `card-child rounded-2xl p-5 flex items-start gap-4 relative transition-all duration-300 ${completionStyles}`;
+                    
+                    const connector = document.createElement('div');
+                    connector.className = 'tree-node-connector';
+                    sceneCard.appendChild(connector);
+
+                    const sCheckbox = document.createElement('input');
+                    sCheckbox.type = 'checkbox';
+                    sCheckbox.id = `scene-cb-${sIndex}-${cIndex}`;
+                    sCheckbox.className = 'premium-checkbox mt-1';
+                    sCheckbox.checked = scene.completed;
+                    sCheckbox.onclick = () => toggleSceneComplete(sIndex, cIndex);
+
+                    const sContent = document.createElement('div');
+                    sContent.className = 'flex-grow min-w-0 font-sans'; 
+                    
+                    // Metadata Badges
+                    let metaHTML = `<div class="flex flex-wrap items-center gap-2 mb-4 text-[9px] font-bold tracking-widest uppercase">`;
+                    if(scene.visualType) {
+                        metaHTML += `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20"><i class="ph-fill ${scene.icon}"></i> ${scene.visualType}</span>`;
+                    }
+                    if(scene.duration) {
+                        metaHTML += `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#020408] text-slate-300 border border-ui-border"><i class="ph-bold ph-clock"></i> Narasi: ${scene.duration}</span>`;
+                    }
+                    if(scene.durasiGenerate) {
+                        metaHTML += `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#020408] text-slate-300 border border-ui-border"><i class="ph-bold ph-hourglass-high"></i> Gen: ${scene.durasiGenerate}</span>`;
+                    }
+                    metaHTML += `</div>`;
+
+                    // Teks Naskah & Ide Visual
+                    let textsHTML = '<div class="space-y-3.5 mb-5">';
+                    if (scene.scriptText) {
+                        textsHTML += `
+                            <div>
+                                <span class="text-[9px] font-bold uppercase tracking-widest text-ui-muted mb-1 block">Skrip Asli (Inggris)</span>
+                                <p class="text-xs text-slate-200 leading-relaxed">"${scene.scriptText}"</p>
+                            </div>
+                        `;
+                    }
+                    if (scene.terjemahanText) {
+                        textsHTML += `
+                            <div>
+                                <span class="text-[9px] font-bold uppercase tracking-widest text-ui-muted mb-1 block">Terjemahan Indonesia</span>
+                                <p class="text-xs text-slate-400 leading-relaxed italic">"${scene.terjemahanText}"</p>
+                            </div>
+                        `;
+                    }
+                    if (scene.ideVisual) {
+                        textsHTML += `
+                            <div class="bg-blue-900/10 rounded-lg p-2.5 border-l-2 border-blue-500">
+                                <span class="text-[9px] font-bold uppercase tracking-widest text-blue-400 mb-0.5 block">Ide Visual</span>
+                                <p class="text-xs text-slate-300 leading-relaxed">${scene.ideVisual}</p>
+                            </div>
+                        `;
+                    }
+                    textsHTML += '</div>';
+
+                    // Actions / Prompts / Keywords
+                    let actionsHTML = '<div class="flex flex-col gap-3">';
+                    
+                    // Lower Third Texts
+                    if (scene.judul || scene.subtitle || scene.overlayText) {
+                         actionsHTML += `<div class="code-box rounded-xl p-3.5 border border-ui-border">`;
+                         if (scene.judul) actionsHTML += `<div class="mb-2"><span class="text-[9px] font-bold uppercase tracking-widest text-ui-muted mb-0.5 block">Judul</span><p class="text-xs font-mono font-medium text-blue-300">${scene.judul}</p></div>`;
+                         if (scene.subtitle) actionsHTML += `<div class="mb-2"><span class="text-[9px] font-bold uppercase tracking-widest text-ui-muted mb-0.5 block">Subtitle</span><p class="text-xs font-mono text-slate-300">${scene.subtitle}</p></div>`;
+                         if (scene.overlayText) actionsHTML += `<div><span class="text-[9px] font-bold uppercase tracking-widest text-ui-muted mb-0.5 block">Overlay Text</span><p class="text-xs font-mono font-medium text-blue-300">${scene.overlayText}</p></div>`;
+                         actionsHTML += `</div>`;
+                    }
+
+                    // Prompt AI
+                    if (scene.prompt) {
+                        actionsHTML += `
+                            <div class="code-box rounded-xl p-3.5 relative group">
+                                <span class="text-[9px] font-bold uppercase tracking-widest text-ui-muted mb-1.5 block flex items-center gap-1.5"><i class="ph-bold ph-sparkle text-blue-400"></i> Prompt AI</span>
+                                <p class="text-[11px] text-slate-300 leading-relaxed pr-8 font-mono break-words">${scene.prompt}</p>
+                                <button onclick="doCopy(${sIndex}, ${cIndex}, 'prompt')" class="absolute top-3 right-3 w-7 h-7 rounded-md bg-[#0a0e17] hover:bg-blue-600 flex items-center justify-center text-blue-400 hover:text-white transition-colors border border-ui-border shadow-sm" title="Salin Prompt">
+                                    <i class="ph-bold ph-copy text-xs"></i>
+                                </button>
+                            </div>
+                        `;
+                    }
+
+                    // Video Prompt
+                    if (scene.videoPrompt) {
+                        actionsHTML += `
+                            <div class="code-box rounded-xl p-3.5 relative group">
+                                <span class="text-[9px] font-bold uppercase tracking-widest text-ui-muted mb-1.5 block flex items-center gap-1.5"><i class="ph-bold ph-magic-wand text-purple-400"></i> Video Prompt</span>
+                                <p class="text-[11px] text-slate-300 leading-relaxed pr-8 font-mono break-words">${scene.videoPrompt}</p>
+                                <button onclick="doCopy(${sIndex}, ${cIndex}, 'videoPrompt')" class="absolute top-3 right-3 w-7 h-7 rounded-md bg-[#0a0e17] hover:bg-blue-600 flex items-center justify-center text-blue-400 hover:text-white transition-colors border border-ui-border shadow-sm" title="Salin Video Prompt">
+                                    <i class="ph-bold ph-copy text-xs"></i>
+                                </button>
+                            </div>
+                        `;
+                    }
+
+                    // Helper untuk baris Keyword
+                    const buildKwRow = (label, val, typeKey) => {
+                        if(!val) return '';
+                        return `
+                            <div class="flex items-center justify-between gap-3 bg-[#0a0e17] rounded-lg p-2.5 border border-ui-border group/btn">
+                                <div class="flex flex-col min-w-0">
+                                    <span class="text-[8px] font-bold uppercase tracking-widest text-blue-500/70 mb-0.5">${label}</span>
+                                    <p class="text-[11px] font-medium text-slate-200 truncate font-mono">${val}</p>
+                                </div>
+                                <button onclick="doCopy(${sIndex}, ${cIndex}, '${typeKey}')" class="flex-shrink-0 w-7 h-7 rounded-md bg-[#020408] hover:bg-blue-600 flex items-center justify-center text-blue-400 hover:text-white transition-all border border-ui-border shadow-sm opacity-80 hover:opacity-100" title="Salin">
+                                    <i class="ph-bold ph-copy text-xs"></i>
+                                </button>
+                            </div>
+                        `;
+                    };
+
+                    // Keywords Pencarian
+                    if (scene.kwSearchA || scene.kwSearchB || scene.kwSearchC) {
+                        actionsHTML += `
+                            <div class="code-box rounded-xl p-3.5 flex flex-col gap-2">
+                                <span class="text-[9px] font-bold uppercase tracking-widest text-ui-muted mb-0.5 block flex items-center gap-1.5"><i class="ph-bold ph-magnifying-glass text-teal-400"></i> Kata Kunci Pencarian</span>
+                                ${buildKwRow('Opsi A (Spesifik)', scene.kwSearchA, 'kwSearchA')}
+                                ${buildKwRow('Opsi B (Medium)', scene.kwSearchB, 'kwSearchB')}
+                                ${buildKwRow('Opsi C (Umum)', scene.kwSearchC, 'kwSearchC')}
+                            </div>
+                        `;
+                    }
+
+                    // Keywords Gambar
+                    if (scene.kwImgA || scene.kwImgB || scene.kwImgC) {
+                        actionsHTML += `
+                            <div class="code-box rounded-xl p-3.5 flex flex-col gap-2">
+                                <span class="text-[9px] font-bold uppercase tracking-widest text-ui-muted mb-0.5 block flex items-center gap-1.5"><i class="ph-bold ph-image text-emerald-400"></i> Kata Kunci Gambar</span>
+                                ${buildKwRow('Opsi A (Spesifik)', scene.kwImgA, 'kwImgA')}
+                                ${buildKwRow('Opsi B (Medium)', scene.kwImgB, 'kwImgB')}
+                                ${buildKwRow('Opsi C (Umum)', scene.kwImgC, 'kwImgC')}
+                            </div>
+                        `;
+                    }
+
+                    actionsHTML += '</div>';
+
+                    sContent.innerHTML = `
+                        <h3 class="text-sm font-bold text-white mb-3 tracking-wide">${scene.title}</h3>
+                        ${metaHTML}
+                        ${textsHTML}
+                        ${actionsHTML}
+                    `;
+
+                    sceneCard.appendChild(sCheckbox);
+                    sceneCard.appendChild(sContent);
+                    innerWrapper.appendChild(sceneCard);
+                });
+
+                childrenContainer.appendChild(innerWrapper);
+                scriptWrapper.appendChild(childrenContainer);
+                els.contentState.appendChild(scriptWrapper);
+
+                if (script.expanded) {
+                    setTimeout(() => {
+                        childrenContainer.style.maxHeight = childrenContainer.scrollHeight + 'px';
+                    }, 10); 
+                }
+            });
+        }
+
+        function toggleScriptExpand(sIndex) {
+            const script = appData.scripts[sIndex];
+            script.expanded = !script.expanded;
+            
+            const container = document.getElementById(`content-${script.id}`);
+            const chevron = container.previousElementSibling.querySelector('.ph-caret-down');
+
+            if (script.expanded) {
+                container.classList.add('expanded');
+                chevron.classList.add('transform', 'rotate-180', 'text-blue-500');
+                container.style.maxHeight = container.scrollHeight + 'px';
+                setTimeout(() => { container.style.maxHeight = 'none'; }, 400);
+            } else {
+                container.style.maxHeight = container.scrollHeight + 'px';
+                container.offsetHeight;
+                container.classList.remove('expanded');
+                chevron.classList.remove('transform', 'rotate-180', 'text-blue-500');
+                container.style.maxHeight = '0px';
+            }
+            saveToStorage();
+        }
+
+        // --- Checkbox Logics ---
+        function applySceneCardStyle(sIndex, cIndex, isCompleted) {
+            const sceneCard = document.getElementById(`scene-card-${sIndex}-${cIndex}`);
+            if (sceneCard) {
+                if (isCompleted) {
+                    sceneCard.classList.add('opacity-40', 'grayscale-[30%]');
+                    sceneCard.classList.remove('opacity-100', 'grayscale-0');
+                } else {
+                    sceneCard.classList.remove('opacity-40', 'grayscale-[30%]');
+                    sceneCard.classList.add('opacity-100', 'grayscale-0');
+                }
+            }
+        }
+
+        function toggleSceneComplete(sIndex, cIndex) {
+            const script = appData.scripts[sIndex];
+            const scene = script.scenes[cIndex];
+            scene.completed = !scene.completed;
+            
+            const scenesCompleted = script.scenes.filter(s => s.completed).length;
+            const isPartial = scenesCompleted > 0 && scenesCompleted < script.scenes.length;
+            const isCompleted = scenesCompleted === script.scenes.length && script.scenes.length > 0;
+            script.completed = isCompleted;
+
+            saveToStorage();
+            applySceneCardStyle(sIndex, cIndex, scene.completed);
+
+            const scriptCheckbox = document.getElementById(`script-cb-${sIndex}`);
+            if (scriptCheckbox) {
+                scriptCheckbox.checked = isCompleted;
+                if (isPartial) scriptCheckbox.classList.add('partial');
+                else scriptCheckbox.classList.remove('partial');
+            }
+
+            const scriptProgress = document.getElementById(`script-progress-${sIndex}`);
+            if (scriptProgress) scriptProgress.innerText = `${scenesCompleted}/${script.scenes.length}`;
+
+            updateProgress();
+        }
+
+        function toggleScriptComplete(sIndex, forceState) {
+            const script = appData.scripts[sIndex];
+            script.completed = forceState;
+            script.scenes.forEach(scene => scene.completed = forceState);
+            
+            saveToStorage();
+            
+            const scriptCheckbox = document.getElementById(`script-cb-${sIndex}`);
+            if (scriptCheckbox) {
+                scriptCheckbox.checked = forceState;
+                scriptCheckbox.classList.remove('partial');
+            }
+
+            const scriptProgress = document.getElementById(`script-progress-${sIndex}`);
+            if (scriptProgress) scriptProgress.innerText = forceState ? `${script.scenes.length}/${script.scenes.length}` : `0/${script.scenes.length}`;
+
+            script.scenes.forEach((scene, cIndex) => {
+                const childCb = document.getElementById(`scene-cb-${sIndex}-${cIndex}`);
+                if (childCb) childCb.checked = forceState;
+                applySceneCardStyle(sIndex, cIndex, forceState);
+            });
+
+            updateProgress();
+        }
+
+        function updateProgress() {
+            let completed = 0;
+            appData.scripts.forEach(script => {
+                completed += script.scenes.filter(s => s.completed).length;
+            });
+            appData.completedScenes = completed;
+
+            els.progressText.innerText = `${completed}/${appData.totalScenes} SELESAI`;
+            const percentage = appData.totalScenes === 0 ? 0 : (completed / appData.totalScenes) * 100;
+            els.progressBar.style.width = `${percentage}%`;
+            
+            if(percentage === 100 && appData.totalScenes > 0) els.progressBar.classList.replace('bg-blue-500', 'bg-emerald-500');
+            else els.progressBar.classList.replace('bg-emerald-500', 'bg-blue-500');
+        }
+
+        // --- Copy to Clipboard Data Link ---
+        window.doCopy = function(sIndex, cIndex, type) {
+            let text = "";
+            const scene = appData.scripts[sIndex].scenes[cIndex];
+            
+            if (type === 'prompt') text = scene.prompt;
+            else if (type === 'videoPrompt') text = scene.videoPrompt;
+            else if (type === 'kwSearchA') text = scene.kwSearchA;
+            else if (type === 'kwSearchB') text = scene.kwSearchB;
+            else if (type === 'kwSearchC') text = scene.kwSearchC;
+            else if (type === 'kwImgA') text = scene.kwImgA;
+            else if (type === 'kwImgB') text = scene.kwImgB;
+            else if (type === 'kwImgC') text = scene.kwImgC;
+            
+            copyToClipboard(text);
+        };
+
+        function copyToClipboard(text) {
+            if (!text) return;
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(showToast).catch(() => fallbackCopy(text));
+            } else {
+                fallbackCopy(text);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast();
+            } catch (err) {
+                console.error('Copy failed', err);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        let toastTimeout;
+        function showToast() {
+            els.toast.classList.remove('opacity-0', 'translate-y-10');
+            els.toast.classList.add('opacity-100', 'translate-y-0');
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                els.toast.classList.remove('opacity-100', 'translate-y-0');
+                els.toast.classList.add('opacity-0', 'translate-y-10');
+            }, 2000);
+        }
+
+        // --- Modal ---
+        function showModal() {
+            els.resetModal.classList.remove('hidden');
+            setTimeout(() => {
+                els.resetModal.classList.remove('opacity-0');
+                els.modalContent.classList.remove('scale-95');
+                els.modalContent.classList.add('scale-100');
+            }, 10);
+        }
+
+        function hideModal() {
+            els.resetModal.classList.add('opacity-0');
+            els.modalContent.classList.remove('scale-100');
+            els.modalContent.classList.add('scale-95');
+            setTimeout(() => {
+                els.resetModal.classList.add('hidden');
+            }, 300);
+        }
+
+        function confirmReset() {
+            appData = { scripts: [], totalScenes: 0, completedScenes: 0 };
+            localStorage.removeItem(STORAGE_KEY);
+            els.fileInput.value = '';
+            hideModal();
+            els.contentState.classList.add('hidden');
+            els.headerControls.classList.add('hidden');
+            els.uploadState.classList.remove('hidden');
+        }
+
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
